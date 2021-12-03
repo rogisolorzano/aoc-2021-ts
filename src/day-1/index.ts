@@ -1,5 +1,10 @@
 import {getAllLines} from "../utils/io";
 
+/**
+ * Iterate at window end of n size, calculating the next window sum and comparing with the current.
+ *
+ * NextWindowSum = CurrentWindowSum - ValueOfCurrentWindowStart + ValueOfNextWindowEnd
+ */
 const getTotalIncrements = (depths: number[], windowSize: number) => {
   let increments = 0;
   let currentWindowSum = depths.slice(0, windowSize).reduce((t, v) => t + v);
