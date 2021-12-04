@@ -9,7 +9,7 @@ export interface CommonBitsResult {
   least: Bit;
 }
 
-export const filterByBitAtPosition = (bits: string[], x: number, match: BitChar): string[] =>
+export const filterByBitAtPosition = (bits: string[], x: number, match: BitChar | string): string[] =>
   bits.filter(b => b[x] === match)
 
 export const getCommonBitsForPosition = (bits: string[], x: number): CommonBitsResult => {

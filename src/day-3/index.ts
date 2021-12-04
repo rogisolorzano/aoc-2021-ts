@@ -7,8 +7,8 @@ async function main() {
   const awesomeSubmarine = new Submarine();
   awesomeSubmarine.loadDiagnosticReport(reportBits);
 
-  console.log('Power consumption:', awesomeSubmarine.getPowerConsumptionLevel());
-  console.log('Life support rating:', awesomeSubmarine.getLifeSupportRating());
+  console.log('Power consumption:', awesomeSubmarine.diagnostics?.getPowerConsumptionLevel());
+  console.log('Life support rating:', awesomeSubmarine.diagnostics?.getLifeSupportRating());
 }
 
 main();
