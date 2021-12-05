@@ -16,7 +16,10 @@ interface BoardNode {
 class Board {
   winningNode: BoardNode | null = null;
   nodePositionMap: Record<BoardNodeValue, BoardNodePosition> = {};
+  xScores: Record<BoardNodePosition['x'], number> = {};
+  yScores: Record<BoardNodePosition['y'], number> = {};
   nodeGraph: BoardNode[][] = [];
+  unmarkedSum = 0;
 
   constructor(boardLines: string[], readonly boardSize = 5) {
     this.loadBoard(boardLines);
@@ -29,50 +32,28 @@ class Board {
       return null;
     }
 
-    node.isMarked = true;
+    if (!node.isMarked) {
+      node.isMarked = true;
+      this.xScores[node.position.x] = (this.xScores[node.position.x] || 0) + 1;
+      this.yScores[node.position.y] = (this.yScores[node.position.y] || 0) + 1;
+      this.unmarkedSum -= node.value;
+    }
 
     return node;
   }
 
-  checkForWinAtNode(node: BoardNode): boolean {
-    let foundUnmarkedXNode = false;
-    let foundUnmarkedYNode = false;
+  hasWonAtNode(node: BoardNode): boolean {
+    const won = this.xScores[node.position.x] === this.boardSize || this.yScores[node.position.y] === this.boardSize;
 
-    for (let x = 0; x < this.boardSize; x++) {
-      foundUnmarkedXNode = !this.nodeGraph[node.position.y][x].isMarked;
-      if (foundUnmarkedXNode) break;
-    }
-
-    for (let y = 0; y < this.boardSize; y++) {
-      foundUnmarkedYNode = !this.nodeGraph[y][node.position.x].isMarked;
-      if (foundUnmarkedYNode) break;
-    }
-
-    if (!foundUnmarkedXNode || !foundUnmarkedYNode) {
+    if (won) {
       this.winningNode = node;
     }
 
-    return !foundUnmarkedXNode || !foundUnmarkedYNode;
+    return won;
   }
 
   getScore() {
-    if (!this.winningNode) {
-      console.warn('Board has not won yet.');
-      return;
-    }
-
-    return this.getUnmarkedNodesSum() * this.winningNode.value;
-  }
-
-  private getUnmarkedNodesSum(): number {
-    return this.nodeGraph.reduce((sum: number, nodes: BoardNode[]) => {
-      for (const node of nodes) {
-        if (!node.isMarked) {
-          sum += node.value;
-        }
-      }
-      return sum;
-    }, 0);
+    return this.unmarkedSum * (this.winningNode?.value ?? 1);
   }
 
   private getNodeByValue(value: BoardNodeValue): BoardNode | null {
@@ -91,6 +72,7 @@ class Board {
       lineNodes.forEach((value, x) => {
         this.nodePositionMap[value] = {x, y};
         this.nodeGraph[y].push({position: {x, y}, isMarked: false, value});
+        this.unmarkedSum += value;
       });
     });
   }
@@ -113,7 +95,7 @@ const simulateBingo = (numbersCalled: number[], boards: Board[], winningBoardPos
   for (const number of numbersCalled) {
     for (let boardId = 0; boardId < boards.length; boardId++) {
       const markedNode = boards[boardId].markNodeIfExists(number);
-      const boardWon = !!markedNode && boards[boardId].checkForWinAtNode(markedNode);
+      const boardWon = !!markedNode && boards[boardId].hasWonAtNode(markedNode);
 
       if (boardWon && !boardWins[boardId]) {
         boardWins[boardId] = true;
