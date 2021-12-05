@@ -20,12 +20,10 @@ class Point {
 }
 
 class Segment {
-  point: Point;
+  point: Point | null = null;
 
   constructor(readonly start: Point,
-              readonly end: Point) {
-    this.point = start;
-  }
+              readonly end: Point) {}
 
   next() {
     if (!this.hasNext()) return null;
@@ -40,14 +38,15 @@ class Segment {
   contains(point: Point) {
     return (this.start.x < this.end.x
         ? point.x >= this.start.x && point.x <= this.end.x
-        : point.x <= this.start.x && point.x >= this.end.x
-      )
+        : point.x <= this.start.x && point.x >= this.end.x)
       && (this.start.y < this.end.y
         ? point.y >= this.start.y && point.y <= this.end.y
         : point.y <= this.start.y && point.y >= this.end.y);
   }
 
   peak() {
+    if (!this.point) return new Point(this.start.x, this.start.y);
+
     const xOffset = this.start.x < this.end.x ? 1 : -1;
     const yOffset = this.start.y < this.end.y ? 1 : -1;
 
@@ -78,8 +77,6 @@ const getOverlappingPointCount = (segments: Segment[]) => {
   const counts: Record<string, number> = {};
 
   for (const segment of segments) {
-    counts[segment.point.toString()] = (counts[segment.point.toString()] || 0) + 1;
-
     while (segment.hasNext()) {
       const c = segment.next()!;
       counts[c.toString()] = (counts[c.toString()] || 0) + 1;
