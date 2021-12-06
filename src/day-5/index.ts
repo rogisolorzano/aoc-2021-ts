@@ -1,4 +1,4 @@
-import {getAllLines} from "../utils";
+import {count, getAllLines} from "../utils";
 
 enum SegmentOrientation {
   Diagonal,
@@ -83,7 +83,7 @@ const getOverlappingPointCount = (segments: Segment[]) => {
     }
   }
 
-  return Object.values(counts).reduce((sum, c) => (c > 1) ? sum + 1 : sum, 0);
+  return count(Object.values(counts), c => c > 1);
 }
 
 async function main() {
