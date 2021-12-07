@@ -25,6 +25,9 @@ const findOptimalAlignment = (positions: number[], costFn: (distance: number) =>
 }
 
 const simpleCostFn = (n: number) => n;
+
+// Initial approach was using a hashmap to memoize the sum at each n so
+// that I can add n + 1 to it, but noticed a pattern when I printed it
 // https://en.wikipedia.org/wiki/1_%2B_2_%2B_3_%2B_4_%2B_%E2%8B%AF
 const naturalNumbersSummationCostFn = (n: number) => n * (n + 1) / 2;
 
