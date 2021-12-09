@@ -69,22 +69,21 @@ class SignalDataDecoder {
       }
 
       if (viableChars.length === 1) {
-        for (const [key, chars] of this.map.entries()) {
-          const remaining = chars.filter(c => c !== viableChars[0]);
-          this.map.set(key, remaining);
-        }
+        this.filterCharFromMap(viableChars[0]);
       }
 
       this.map.set(char, viableChars);
     }
   }
 
-  countCharacterDiff(char1: string, char2: string) {
-    return this.sortedPatterns
-      .reduce((sum, p) => (p.includes(char1) && !p.includes(char2)) ? sum + 1 : sum, 0);
+  decode() {
+    for (const pattern of this.sortedPatterns) {
+      this.add(pattern);
+    }
+    this.resolveAmbiguousCharacters();
   }
 
-  resolveAmbiguousCharacters = () => {
+  resolveAmbiguousCharacters() {
     [['c', 'f'], ['b', 'd'], ['e', 'g']].forEach(([char1, char2]) => {
       const possibleDigits = [...this.map.entries()].filter(r => r[1].includes(char1)).map(r => r[0]);
       const result = this.countCharacterDiff(possibleDigits[0], possibleDigits[1]);
@@ -93,11 +92,17 @@ class SignalDataDecoder {
     })
   }
 
-  decode = () => {
-    for (const pattern of this.sortedPatterns) {
-      this.add(pattern);
-    }
-    this.resolveAmbiguousCharacters();
+  countCharacterDiff(char1: string, char2: string) {
+    return this.sortedPatterns
+      .reduce((sum, p) => (p.includes(char1) && !p.includes(char2)) ? sum + 1 : sum, 0);
+  }
+
+  sort(patterns: SignalData['patterns']) {
+    const buckets: Record<number, string[]> = {2: [], 3: [], 4: [], 7: []};
+    const remaining: string[] = [];
+    patterns.forEach(p => buckets[p.length]?.push(p) || remaining.push(p));
+
+    return [...Object.values(buckets).flatMap(ps => ps), ...remaining];
   }
 
   getUniqueOutputs() {
@@ -118,12 +123,11 @@ class SignalDataDecoder {
     return parseInt(outputNumber);
   }
 
-  sort(patterns: SignalData['patterns']) {
-    const buckets: Record<number, string[]> = {2: [], 3: [], 4: [], 7: []};
-    const remaining: string[] = [];
-    patterns.forEach(p => buckets[p.length]?.push(p) || remaining.push(p));
-
-    return [...Object.values(buckets).flatMap(ps => ps), ...remaining];
+  private filterCharFromMap(char: string) {
+    for (const [key, chars] of this.map.entries()) {
+      const remaining = chars.filter(c => c !== char);
+      this.map.set(key, remaining);
+    }
   }
 }
 
