@@ -55,6 +55,12 @@ class OctopusMap {
     return this.simulateFlashes();
   }
 
+  /**
+   * Loops through all octopus, putting octopus that needs to be flashed into a flash queue. If
+   * an octopus flashes and notices it causes one of its neighbors to flash, it puts that into
+   * the flash queue as well. The flash queue keeps processing until the chain reaction in that
+   * area ends!
+   */
   private simulateFlashes() {
     const pendingFlashes = new Map<string, Point>();
     const flashQueue = [];
