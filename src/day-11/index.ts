@@ -2,26 +2,18 @@ import {getAllLines} from "../utils";
 import {Grid, Point, Queue} from "../core";
 
 class OctopusGrid extends Grid {
-  findFirstSync() {
+  findFirstSync(captureCountAt: number) {
     let stepCount = 0;
+    let flashCount = 0;
 
     while (true) {
       if (this.sum() === 0) break;
-      this.step();
+      let count = this.step();
+      if (stepCount < captureCountAt) flashCount += count;
       stepCount++;
     }
 
-    return stepCount;
-  }
-
-  simulateSteps(n: number) {
-    let flashCount = 0;
-
-    for (let i = 0; i < n; i++) {
-      flashCount += this.step();
-    }
-
-    return flashCount;
+    return [stepCount, flashCount];
   }
 
   private step() {
@@ -40,17 +32,16 @@ class OctopusGrid extends Grid {
     const queue = new Queue<Point>();
 
     this.points.forEach(ps => ps.forEach(currentPoint => {
-      currentPoint.value > 9 && queue.enqueueUnique(currentPoint)
+      if (currentPoint.value > 9) queue.enqueueUnique(currentPoint);
 
       while (queue.length() > 0) {
         const point = queue.dequeue()!;
-        const neighbors = this.getNeighbors(point, true);
         point.value = 0;
         flashCount++;
 
-        for (const neighbor of neighbors) {
-          neighbor.value > 0 && neighbor.value++;
-          neighbor.value > 9 && queue.enqueueUnique(neighbor)
+        for (const neighbor of this.getNeighbors(point, true)) {
+          if (neighbor.value > 0) neighbor.value++;
+          if (neighbor.value > 9) queue.enqueueUnique(neighbor);
         }
       }
     }))
@@ -63,12 +54,11 @@ class OctopusGrid extends Grid {
 async function main() {
   const lines = (await getAllLines(__dirname, 'input.txt'));
   const points = lines.map((l, y) => l.split('').map((v, x) => new Point(x, y, Number(v))));
-  const pointsCopy = points.map(ps => ps.map(p => p.copy()));
   const map = new OctopusGrid(points);
-  const mapTwo = new OctopusGrid(pointsCopy);
+  const [syncedAtStep, flashesAt195] = map.findFirstSync(195);
 
-  console.log('Pt 1.', map.simulateSteps(195));
-  console.log('Pt 2.', mapTwo.findFirstSync());
+  console.log('Pt 1.', flashesAt195);
+  console.log('Pt 2.', syncedAtStep);
 }
 
 main();

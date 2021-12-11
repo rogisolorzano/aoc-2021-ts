@@ -9,10 +9,6 @@ export class Point implements IQueueable {
   toString() {
     return `${this.x},${this.y}`;
   }
-
-  copy() {
-    return new Point(this.x, this.y, this.value);
-  }
 }
 
 export class Grid {
