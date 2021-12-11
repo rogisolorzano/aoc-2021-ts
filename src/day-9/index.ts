@@ -1,15 +1,6 @@
 import {getAllLines} from "../utils";
 import {isDefined} from "../utils/general";
-
-class Point {
-  constructor(public x: number,
-              public y: number,
-              public value: number) {}
-
-  toString() {
-    return `${this.x},${this.y}`;
-  }
-}
+import {Point} from "../core";
 
 class HeightMap {
   constructor(readonly points: Point[][]) {}
