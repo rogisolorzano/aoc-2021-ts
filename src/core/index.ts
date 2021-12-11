@@ -1,3 +1,3 @@
 export * from './submarine';
-export * from './point';
+export * from './grid';
 export * from './queue';

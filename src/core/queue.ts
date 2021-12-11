@@ -6,8 +6,8 @@ export class Queue<T extends IQueueable> {
   private qMap = new Map<string, T>();
   private q: T[] = [];
 
-  dequeue(): T {
-    return this.q.shift()!;
+  dequeue(): T | undefined {
+    return this.q.shift();
   }
 
   enqueue(v: T) {
@@ -18,6 +18,10 @@ export class Queue<T extends IQueueable> {
   enqueueUnique(v: T) {
     if (this.qMap.has(v.toString())) return;
     this.enqueue(v);
+  }
+
+  history(): T[] {
+    return [...this.qMap.values()];
   }
 
   length() {

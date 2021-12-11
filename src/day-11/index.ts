@@ -1,11 +1,7 @@
 import {getAllLines} from "../utils";
-import {Point, Queue} from "../core";
-import {isDefined} from "../utils/general";
+import {Grid, Point, Queue} from "../core";
 
-class OctopusMap {
-  constructor(readonly points: Point[][]) {
-  }
-
+class OctopusGrid extends Grid {
   findFirstSync() {
     let stepCount = 0;
 
@@ -28,11 +24,6 @@ class OctopusMap {
     return flashCount;
   }
 
-  sum() {
-    return this.points
-      .reduce((sum, points) => sum + points.reduce((s, p) => s += p.value, 0), 0);
-  }
-
   private step() {
     this.points.forEach((ps) => ps.forEach(p => p.value++));
     return this.simulateFlashes();
@@ -52,8 +43,8 @@ class OctopusMap {
       currentPoint.value > 9 && queue.enqueueUnique(currentPoint)
 
       while (queue.length() > 0) {
-        const point = queue.dequeue();
-        const neighbors = this.getNeighbors(point);
+        const point = queue.dequeue()!;
+        const neighbors = this.getNeighbors(point, true);
         point.value = 0;
         flashCount++;
 
@@ -66,25 +57,6 @@ class OctopusMap {
 
     return flashCount;
   }
-
-  private getNeighbors(point: Point): Point[] {
-    return [
-      [point.x, point.y - 1],
-      [point.x + 1, point.y],
-      [point.x, point.y + 1],
-      [point.x - 1, point.y],
-      [point.x - 1, point.y - 1],
-      [point.x + 1, point.y - 1],
-      [point.x + 1, point.y + 1],
-      [point.x - 1, point.y + 1],
-    ]
-      .filter(([x, y]) => this.hasPoint(x, y))
-      .map(([x, y]) => this.points[y][x]);
-  }
-
-  private hasPoint(x: number, y: number) {
-    return isDefined(this.points[y]) && isDefined(this.points[y][x]);
-  }
 }
 
 
@@ -92,8 +64,8 @@ async function main() {
   const lines = (await getAllLines(__dirname, 'input.txt'));
   const points = lines.map((l, y) => l.split('').map((v, x) => new Point(x, y, Number(v))));
   const pointsCopy = points.map(ps => ps.map(p => p.copy()));
-  const map = new OctopusMap(points);
-  const mapTwo = new OctopusMap(pointsCopy);
+  const map = new OctopusGrid(points);
+  const mapTwo = new OctopusGrid(pointsCopy);
 
   console.log('Pt 1.', map.simulateSteps(195));
   console.log('Pt 2.', mapTwo.findFirstSync());

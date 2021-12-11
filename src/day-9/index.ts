@@ -1,10 +1,7 @@
 import {getAllLines} from "../utils";
-import {isDefined} from "../utils/general";
-import {Point} from "../core";
+import {Grid, Point, Queue} from "../core";
 
-class HeightMap {
-  constructor(readonly points: Point[][]) {}
-
+class HeightMap extends Grid {
   getLowPointRiskLevel() {
     return this.getLowPoints().reduce((riskLevel, point) => riskLevel + point.value + 1, 0);
   }
@@ -18,19 +15,16 @@ class HeightMap {
   }
 
   searchBasin(startingPoint: Point) {
-    const visitedNodes = new Map([[startingPoint.toString(), startingPoint]]);
-    const pointQueue = [startingPoint];
+    const queue = new Queue<Point>();
+    queue.enqueueUnique(startingPoint);
 
-    while (pointQueue.length > 0) {
-      this.getNeighbors(pointQueue.shift()!)
-        .filter(p => p.value !== 9 && !visitedNodes.has(p.toString()))
-        .forEach(p => {
-          visitedNodes.set(p.toString(), p);
-          pointQueue.push(p)
-        });
+    while (queue.length() > 0) {
+      this.getNeighbors(queue.dequeue()!)
+        .filter(p => p.value !== 9)
+        .forEach(p => queue.enqueueUnique(p));
     }
 
-    return [...visitedNodes.values()];
+    return queue.history();
   }
 
   getLowPoints() {
@@ -42,21 +36,6 @@ class HeightMap {
 
   isLowPoint(point: Point) {
     return this.getNeighbors(point).every(n => point.value < n.value);
-  }
-
-  getNeighbors(point: Point): Point[] {
-    return [
-      [point.x, point.y - 1],
-      [point.x + 1, point.y],
-      [point.x, point.y + 1],
-      [point.x - 1, point.y],
-    ]
-      .filter(([x, y]) => this.hasPoint(x, y))
-      .map(([x, y]) => this.points[y][x]);
-  }
-
-  hasPoint(x: number, y: number) {
-    return isDefined(this.points[y]) && isDefined(this.points[y][x]);
   }
 }
 
