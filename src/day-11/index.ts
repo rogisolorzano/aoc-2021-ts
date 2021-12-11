@@ -1,5 +1,5 @@
 import {getAllLines} from "../utils";
-import {Point} from "../core";
+import {Point, Queue} from "../core";
 import {isDefined} from "../utils/general";
 
 class OctopusMap {
@@ -45,27 +45,21 @@ class OctopusMap {
    * area ends!
    */
   private simulateFlashes() {
-    const pendingFlashes = new Map<string, Point>();
-    const flashQueue: Point[] = [];
-    const enqueue = (point: Point) => {
-      if (pendingFlashes.has(point.toString())) return;
-      flashQueue.push(point);
-      pendingFlashes.set(point.toString(), point);
-    }
     let flashCount = 0;
+    const queue = new Queue<Point>();
 
     this.points.forEach(ps => ps.forEach(currentPoint => {
-      currentPoint.value > 9 && enqueue(currentPoint)
+      currentPoint.value > 9 && queue.enqueueUnique(currentPoint)
 
-      while (flashQueue.length > 0) {
-        const point = flashQueue.shift()!;
+      while (queue.length() > 0) {
+        const point = queue.dequeue();
         const neighbors = this.getNeighbors(point);
         point.value = 0;
         flashCount++;
 
         for (const neighbor of neighbors) {
           neighbor.value > 0 && neighbor.value++;
-          neighbor.value > 9 && enqueue(neighbor)
+          neighbor.value > 9 && queue.enqueueUnique(neighbor)
         }
       }
     }))

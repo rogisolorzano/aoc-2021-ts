@@ -1,4 +1,6 @@
-export class Point {
+import {IQueueable} from "./queue";
+
+export class Point implements IQueueable {
   constructor(public x: number,
               public y: number,
               public value: number) {}
