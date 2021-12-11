@@ -3,16 +3,16 @@ import {Point} from "../core";
 import {isDefined} from "../utils/general";
 
 class OctopusMap {
-  constructor(readonly points: Point[][]) {}
+  constructor(readonly points: Point[][]) {
+  }
 
   findFirstSync() {
     let stepCount = 0;
+
     while (true) {
+      if (this.sum() === 0) break;
       this.step();
       stepCount++;
-      if (this.sum() === 0) {
-        break;
-      }
     }
 
     return stepCount;
@@ -24,34 +24,17 @@ class OctopusMap {
     for (let i = 0; i < n; i++) {
       flashCount += this.step();
     }
-    this.print();
 
     return flashCount;
   }
 
-  print() {
-    const mapStr = this.points.reduce((str, points) => {
-      points.forEach((p) => str += p.value);
-      str += '\n';
-      return str;
-    }, '');
-    console.log(mapStr);
-  }
-
   sum() {
-    return this.points.reduce((sum, points) => {
-      points.forEach((p) => sum += p.value);
-      return sum;
-    }, 0);
+    return this.points
+      .reduce((sum, points) => sum + points.reduce((s, p) => s += p.value, 0), 0);
   }
 
   private step() {
-    for (let y = 0; y < this.points.length; y++) {
-      for (let x = 0; x < this.points[y].length; x++) {
-        this.points[y][x].value++;
-      }
-    }
-
+    this.points.forEach((ps) => ps.forEach(p => p.value++));
     return this.simulateFlashes();
   }
 
@@ -63,37 +46,29 @@ class OctopusMap {
    */
   private simulateFlashes() {
     const pendingFlashes = new Map<string, Point>();
-    const flashQueue = [];
+    const flashQueue: Point[] = [];
+    const enqueue = (point: Point) => {
+      if (pendingFlashes.has(point.toString())) return;
+      flashQueue.push(point);
+      pendingFlashes.set(point.toString(), point);
+    }
     let flashCount = 0;
 
-    for (let y = 0; y < this.points.length; y++) {
-      for (let x = 0; x < this.points[y].length; x++) {
-        const thisPoint = this.points[y][x];
+    this.points.forEach(ps => ps.forEach(currentPoint => {
+      currentPoint.value > 9 && enqueue(currentPoint)
 
-        if (thisPoint.value > 9) {
-          flashQueue.push(thisPoint);
-          pendingFlashes.set(thisPoint.toString(), thisPoint);
-        }
+      while (flashQueue.length > 0) {
+        const point = flashQueue.shift()!;
+        const neighbors = this.getNeighbors(point);
+        point.value = 0;
+        flashCount++;
 
-        while (flashQueue.length > 0) {
-          const point = flashQueue.shift()!;
-          const neighbors = this.getNeighbors(point);
-          point.value = 0;
-          flashCount++;
-
-          for (const neighbor of neighbors) {
-            if (neighbor.value > 0) {
-              neighbor.value++;
-            }
-
-            if (neighbor.value > 9 && !pendingFlashes.has(neighbor.toString())) {
-              flashQueue.push(neighbor);
-              pendingFlashes.set(neighbor.toString(), neighbor);
-            }
-          }
+        for (const neighbor of neighbors) {
+          neighbor.value > 0 && neighbor.value++;
+          neighbor.value > 9 && enqueue(neighbor)
         }
       }
-    }
+    }))
 
     return flashCount;
   }
