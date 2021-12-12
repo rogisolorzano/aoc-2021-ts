@@ -1,14 +1,14 @@
-import {getAllLines} from "../utils";
+import {getAllLines, wait} from "../utils";
 import {Grid, Point, Queue} from "../core";
 
 class OctopusGrid extends Grid {
-  findFirstSync(captureCountAt: number) {
+  async findFirstSync(captureCountAt: number) {
     let stepCount = 0;
     let flashCount = 0;
 
     while (true) {
       if (this.sum() === 0) break;
-      let count = this.step();
+      let count = await this.step();
       if (stepCount < captureCountAt) flashCount += count;
       stepCount++;
     }
@@ -27,26 +27,40 @@ class OctopusGrid extends Grid {
    * the flash queue as well. The flash queue keeps processing until the chain reaction in that
    * area ends!
    */
-  private simulateFlashes() {
+  private async simulateFlashes() {
     let flashCount = 0;
     const queue = new Queue<Point>();
 
-    this.points.forEach(ps => ps.forEach(currentPoint => {
-      if (currentPoint.value > 9) queue.enqueueUnique(currentPoint);
+    for (const pointsY of this.points) {
+      for (const currentPoint of pointsY) {
+        if (currentPoint.value > 9) queue.enqueueUnique(currentPoint);
 
-      while (queue.length() > 0) {
-        const point = queue.dequeue()!;
-        point.value = 0;
-        flashCount++;
+        while (queue.length() > 0) {
+          const point = queue.dequeue()!;
+          point.value = 0;
+          flashCount++;
 
-        for (const neighbor of this.getNeighbors(point, true)) {
-          if (neighbor.value > 0) neighbor.value++;
-          if (neighbor.value > 9) queue.enqueueUnique(neighbor);
+          for (const neighbor of this.getNeighbors(point, true)) {
+            if (neighbor.value > 0) neighbor.value++;
+            if (neighbor.value > 9) queue.enqueueUnique(neighbor);
+          }
+          await this.visualize();
         }
       }
-    }))
+    }
 
     return flashCount;
+  }
+
+  private async visualize() {
+    const grid = this.points.reduce((str, points) => {
+      points.forEach((p) => str += p.value === 0 ? `\x1b[43m 🐙 \x1b[0m` : ' 🐙 ');
+      str += '\n';
+      return str;
+    }, '');
+    console.clear();
+    console.log(grid);
+    await wait(10);
   }
 }
 
@@ -55,7 +69,7 @@ async function main() {
   const lines = (await getAllLines(__dirname, 'input.txt'));
   const points = lines.map((l, y) => l.split('').map((v, x) => new Point(x, y, Number(v))));
   const map = new OctopusGrid(points);
-  const [syncedAtStep, flashesAt195] = map.findFirstSync(195);
+  const [syncedAtStep, flashesAt195] = await map.findFirstSync(195);
 
   console.log('Pt 1.', flashesAt195);
   console.log('Pt 2.', syncedAtStep);
