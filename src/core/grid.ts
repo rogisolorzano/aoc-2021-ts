@@ -1,5 +1,5 @@
 import {IQueueable} from "./queue";
-import {isDefined} from "../utils/general";
+import {isDefined} from "../utils";
 
 export class Point implements IQueueable {
   constructor(public x: number,
@@ -8,6 +8,14 @@ export class Point implements IQueueable {
 
   toString() {
     return `${this.x},${this.y}`;
+  }
+
+  copyWith(updates: { x?: number; y?: number; value?: number }) {
+    return new Point(
+      isDefined(updates.x) ? updates.x : this.x,
+      isDefined(updates.y) ? updates.y : this.y,
+      isDefined(updates.value) ? updates.value : this.value,
+    );
   }
 }
 
