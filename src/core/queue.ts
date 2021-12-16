@@ -1,8 +1,13 @@
 export interface IQueueable {
   toString(): string;
 }
+export interface IQueue<T> {
+  enqueue(v: T): void;
+  dequeue(): T | undefined;
+  length(): number;
+}
 
-export class Queue<T extends IQueueable> {
+export class Queue<T extends IQueueable> implements IQueue<T> {
   private qMap = new Map<string, T>();
   private q: T[] = [];
 

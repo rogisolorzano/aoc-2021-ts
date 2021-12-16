@@ -36,11 +36,15 @@ export class Grid {
         ) : [])
     ]
       .filter(([x, y]) => this.hasPoint(x, y))
-      .map(([x, y]) => this.points[y][x]);
+      .map(([x, y]) => this.get(x, y));
   }
 
   protected hasPoint(x: number, y: number) {
     return isDefined(this.points[y]) && isDefined(this.points[y][x]);
+  }
+
+  protected get(x: number, y: number) {
+    return this.points[y][x];
   }
 
   protected sum() {
