@@ -14,6 +14,9 @@ interface TargetBounds {
   maxY: number;
 }
 
+/**
+ * Based on the rules for what happens on each step, we can deduce these formulas.
+ */
 const fvx = (n: number, startVx: number) => Math.max(0, startVx - n);
 const fvy = (n: number, startVy: number) => startVy - n;
 const fx1 = (n: number, startVx: number) => (n * startVx) - naturalNumbersSummation(n - 1);
@@ -25,6 +28,9 @@ const isInTarget = ({x, y}: ProbePosition, bounds: TargetBounds) =>
 
 const isPastTarget = ({x, y}: ProbePosition, bounds: TargetBounds) => x > bounds.maxX || y < bounds.minY;
 
+/**
+ * We can get the probe position at step n using the formulas above.
+ */
 const getProbePositionAtStep = (n: number, [startVx, startVy]: [number, number]): ProbePosition => ({
   x: fvx(n, startVx) > 0 ? fx1(n, startVx) : fx2(n, startVx),
   y: fy(n, startVy),
@@ -32,6 +38,9 @@ const getProbePositionAtStep = (n: number, [startVx, startVy]: [number, number])
   vy: fvy(n, startVy),
 });
 
+/**
+ * For minVX, reverse natural numbers summation from minX to startX (0). MaxVX is target bounds maxX.
+ */
 const getXVelocityRanges = (targetBounds: TargetBounds) => {
   let d = 0;
   let n = 0;
@@ -41,9 +50,19 @@ const getXVelocityRanges = (targetBounds: TargetBounds) => {
   }
   return [n, targetBounds.maxX];
 }
+/**
+ * First possible minVY is target bounds minY. MaxVY is absolute of the target bounds minY.
+ */
 const getYVelocityRanges = (targetBounds: TargetBounds) => [targetBounds.minY, Math.abs(targetBounds.minY)];
+/**
+ * With an initial velocity of yVelocity, it will take yVelocity steps to
+ * hit the max. We can use fy(yVelocity) to get the expected y at the max.
+ */
 const getMaxYForVelocity = (yVelocity: number) => fy(yVelocity, yVelocity);
 
+/**
+ * Launch the probe, stepping until it passes the target.
+ */
 const launchProbe = (startVelocity: [number, number], targetBounds: TargetBounds) => {
   let probePosition = getProbePositionAtStep(0, startVelocity);
   let step = 1;
