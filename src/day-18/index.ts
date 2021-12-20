@@ -48,7 +48,8 @@ const split = (num: string, pointer: number) => {
 };
 
 /**
- * Searches for a candidate snail num to explode.
+ * Searches for a candidate snail num to explode. Keeps track of current depth
+ * by keeping track of '['s and ']'s.
  */
 const explodeSearch = (num: string): [boolean, string] => {
   let depth = -1;
@@ -71,7 +72,6 @@ const splitSearch = (num: string): [boolean, string] => {
   let pointer = 0;
   while (pointer < num.length) {
     if (canSplit(num, pointer)) return [true, split(num, pointer)];
-    if (pointer === num.length - 1) break;
     pointer++;
   }
   return [false, num];
