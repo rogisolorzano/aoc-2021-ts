@@ -8,6 +8,8 @@ interface Instruction {
   cuboid: Cuboid;
 }
 
+const isValidIntersection = (c: Cuboid) => c.x[0] <= c.x[1] && c.y[0] <= c.y[1] && c.z[0] <= c.z[1];
+
 /**
  * Builds the 6 possible cuboids that can result from the difference
  * between a and b, and only keeps the valid ones (volume > 0).
@@ -27,31 +29,23 @@ class Cuboid {
               readonly z: CoordinateRange) {}
 
   /**
-   * Whether this cuboid intersects with another.
+   * Intersects a cuboid, clipping its bounds.
    */
-  intersectsWith(cuboid: Cuboid) {
-    return ((this.x[1] > cuboid.x[0] && cuboid.x[1] > this.x[0])
-      && (this.y[1] > cuboid.y[0] && cuboid.y[1] > this.y[0])
-      && (this.z[1] > cuboid.z[0] && cuboid.z[1] > this.z[0]));
-  }
-
-  /**
-   * Clips a cuboid to its own bounds.
-   */
-  clip(cuboid: Cuboid) {
-    return new Cuboid(
+  intersect(cuboid: Cuboid) {
+    const intersection = new Cuboid(
       [Math.max(this.x[0], cuboid.x[0]), Math.min(this.x[1], cuboid.x[1])],
       [Math.max(this.y[0], cuboid.y[0]), Math.min(this.y[1], cuboid.y[1])],
       [Math.max(this.z[0], cuboid.z[0]), Math.min(this.z[1], cuboid.z[1])],
     );
+    return isValidIntersection(intersection) ? intersection : null;
   }
 
   /**
    * Subtracts the overlapping area of one cuboid, which might result in other cuboids.
    */
   subtract(cuboid: Cuboid): Cuboid[] {
-    if (!this.intersectsWith(cuboid)) return [this];
-    return getRemainingCuboids(this, this.clip(cuboid));
+    if (!this.intersect(cuboid)) return [this];
+    return getRemainingCuboids(this, this.intersect(cuboid)!);
   }
 
   /**
@@ -74,33 +68,22 @@ class Cuboid {
  *   - If an active cuboid doesn't intersect with the instruction cuboid at all, the active
  *     cuboid is put into newCuboids as is
  * - We can then always remove the area of the instruction cuboid that overlaps with any
- *   other cuboid. (activeCuboids.shift())
+ *   other cuboid.
  */
-const processInstruction = (instruction: Instruction, activeCuboids: Cuboid[], boundsCuboid?: Cuboid) => {
-  if (boundsCuboid && !boundsCuboid.intersectsWith(instruction.cuboid)) return activeCuboids;
-
-  const newCuboids = (instruction.action === 'on') ? [instruction.cuboid] : [];
-
-  while (activeCuboids.length > 0) {
-    const cuboid = activeCuboids.shift()!;
-    newCuboids.push(...cuboid.subtract(instruction.cuboid));
-  }
-
-  return newCuboids;
-}
+const processInstruction = (instruction: Instruction, activeCuboids: Cuboid[], boundsCuboid?: Cuboid) =>
+  (boundsCuboid && !boundsCuboid.intersect(instruction.cuboid))
+    ? activeCuboids
+    : activeCuboids.reduce(
+      (newCuboids, cuboid) => [...newCuboids, ...cuboid.subtract(instruction.cuboid)],
+      (instruction.action === 'on') ? [instruction.cuboid] : []);
 
 /**
  * Reboots a reactor with an optional cuboid to use as the bounds.
  */
-const rebootReactor = (instructions: Instruction[], boundsCuboid?: Cuboid) => {
-  let activeCuboids: Cuboid[] = [];
-
-  for (const instruction of instructions) {
-    activeCuboids = processInstruction(instruction, activeCuboids, boundsCuboid);
-  }
-
-  return sum(activeCuboids.map(c => c.volume()));
-}
+const rebootReactor = (instructions: Instruction[], bounds?: Cuboid) =>
+  sum(instructions
+    .reduce((on, instruction) => processInstruction(instruction, on, bounds), [] as Cuboid[])
+    .map(c => c.volume()));
 
 /**
  * Parses the input.
