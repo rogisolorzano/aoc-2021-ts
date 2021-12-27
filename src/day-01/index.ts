@@ -7,15 +7,15 @@ import {sum, getAllLines} from "../utils";
  */
 const getTotalIncrements = (depths: number[], windowSize: number) => {
   let increments = 0;
-  let currentWindowSum = sum(depths.slice(0, windowSize));
+  let currentSum = sum(depths.slice(0, windowSize));
 
   for (let windowEnd = windowSize - 1; windowEnd < depths.length - 1; windowEnd++) {
-    const nextWindowSum = currentWindowSum - depths[windowEnd - (windowSize - 1)] + depths[windowEnd + 1];
+    const nextSum = currentSum - depths[windowEnd - (windowSize - 1)] + depths[windowEnd + 1];
 
-    if (nextWindowSum > currentWindowSum) {
+    if (nextSum > currentSum) {
       increments++;
     }
-    currentWindowSum = nextWindowSum;
+    currentSum = nextSum;
   }
 
   return increments;
